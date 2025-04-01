@@ -2,10 +2,9 @@ import os
 import shutil
 import sys
 import argparse
-import subprocess
 
-# 分為安全路徑與高風險路徑
-safe_directories = [
+# 定義要清理的目錄列表
+directories = [
     "~/Library/Developer/CoreSimulator/Devices",
     "~/Library/Developer/CoreSimulator/Caches/dyld",
     "~/Library/Developer/XCTestDevices",
@@ -17,12 +16,6 @@ safe_directories = [
     "/Library/Developer/Xcode/iOS DeviceSupport",
 ]
 
-risky_directories = [
-    "/Library/Developer/CoreSimulator/Profiles/Runtimes",
-    "~/Library/Caches",
-    "/Library/Caches",
-]
-
 def confirm_deletion(prompt, auto=False):
     if auto:
         return True
@@ -31,14 +24,6 @@ def confirm_deletion(prompt, auto=False):
         if response in ['y', 'n']:
             return response == 'y'
         print("請輸入 y 或 n")
-
-def open_directory(directory):
-    """在 Finder 中開啟目錄"""
-    directory = os.path.expanduser(directory)
-    if os.path.exists(directory):
-        subprocess.run(['open', directory])
-        return True
-    return False
 
 def safe_delete_directory(directory, auto=False):
     directory = os.path.expanduser(directory)
@@ -73,30 +58,13 @@ def main():
     print("⚠️  警告：此工具將刪除指定的快取與模擬器資料")
     print("請先備份重要內容！\n")
 
-    if not args.auto and not confirm_deletion("👉 是否要繼續執行安全清理？"):
+    if not args.auto and not confirm_deletion("👉 是否要繼續執行清理？"):
         print("已取消操作")
         sys.exit(0)
 
-    # 清理安全路徑
-    for directory in safe_directories:
+    # 清理目錄
+    for directory in directories:
         safe_delete_directory(directory, args.auto)
-
-    # 顯示高風險路徑
-    print("\n⚠️ 以下為風險較高的路徑，請自行確認後再決定是否刪除：")
-    print("=" * 50)
-    for directory in risky_directories:
-        expanded_dir = os.path.expanduser(directory)
-        if os.path.exists(expanded_dir):
-            print(f"📁 {expanded_dir}")
-            if not args.auto:
-                if confirm_deletion(f"👉 是否要在 Finder 中開啟此目錄？"):
-                    if open_directory(expanded_dir):
-                        print(f"✅ 已在 Finder 中開啟：{expanded_dir}")
-                    else:
-                        print(f"❌ 無法開啟目錄：{expanded_dir}")
-        else:
-            print(f"❎ 目錄不存在：{expanded_dir}")
-        print("-" * 50)
 
 if __name__ == "__main__":
     main()
